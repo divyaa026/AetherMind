@@ -1,0 +1,236 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13
+    container_name: mindguard-postgres
+    environment:
+      POSTGRES_DB: mindguard
+      POSTGRES_USER: mindguard_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - mindguard-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindguard_user -d mindguard"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:6-alpine
+    container_name: mindguard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mindguard-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MindGuard Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindguard-backend
+    environment:
+      - DATABASE_URL=postgresql://mindguard_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/mindguard
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key}
+      - MODEL_PATH=/app/models
+      - FEDERATED_LEARNING_ENABLED=true
+      - DIFFERENTIAL_PRIVACY_EPSILON=1.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mindguard-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MindGuard Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mindguard-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_WS_URL=ws://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - mindguard-network
+
+  # ML Training Service
+  ml-training:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: mindguard-ml-training
+    environment:
+      - DATABASE_URL=postgresql://mindguard_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/mindguard
+      - MODEL_PATH=/app/models
+      - FEDERATED_LEARNING_ENABLED=true
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./datasets:/app/datasets
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindguard-network
+    profiles:
+      - training
+
+  # Federated Learning Coordinator
+  federated-coordinator:
+    build:
+      context: ./ml/federated
+      dockerfile: Dockerfile
+    container_name: mindguard-federated-coordinator
+    environment:
+      - DATABASE_URL=postgresql://mindguard_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/mindguard
+      - REDIS_URL=redis://redis:6379
+      - FEDERATED_LEARNING_ENABLED=true
+      - NUM_CLIENTS=100
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mindguard-network
+    profiles:
+      - federated
+
+  # Model Monitoring (Evidently AI)
+  evidently:
+    image: evidentlyai/evidently:latest
+    container_name: mindguard-evidently
+    ports:
+      - "8081:8081"
+    environment:
+      - EVIDENTLY_AI_KEY=${EVIDENTLY_AI_KEY}
+    volumes:
+      - ./monitoring:/app/monitoring
+    networks:
+      - mindguard-network
+    profiles:
+      - monitoring
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mindguard-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - mindguard-network
+    profiles:
+      - monitoring
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mindguard-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - mindguard-network
+    profiles:
+      - monitoring
+
+  # Load Testing (Locust)
+  locust:
+    image: locustio/locust:latest
+    container_name: mindguard-locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./tests/load:/app/tests
+    command: -f /app/tests/locustfile.py --host=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - mindguard-network
+    profiles:
+      - testing
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: mindguard-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - mindguard-network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  mindguard-network:
+    driver: bridge
