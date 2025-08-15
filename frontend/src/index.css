@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AetherMind Therapeutic Design System
+   HIPAA-compliant colors with therapeutic psychology
+   All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Core therapeutic palette */
+    --background: 220 22% 98%; /* Cloud White */
+    --foreground: 222 15% 25%; /* Mindful Gray */
+
+    /* Serenity Blue - Primary therapeutic color */
+    --primary: 212 45% 58%; /* #5B84C4 */
+    --primary-foreground: 220 22% 98%;
+    --primary-glow: 212 65% 75%;
+    --primary-deep: 212 45% 45%;
+
+    /* Compassion Pink - Secondary healing color */
+    --secondary: 340 100% 84%; /* #FFA5BA */
+    --secondary-foreground: 222 15% 25%;
+    --secondary-soft: 340 100% 92%;
+    --secondary-warm: 340 100% 76%;
+
+    /* Growth Green - Achievement color */
+    --success: 122 39% 49%; /* #4CAF50 */
+    --success-foreground: 220 22% 98%;
+    --success-glow: 122 39% 70%;
+
+    /* Crisis Emergency - Urgent attention */
+    --emergency: 0 85% 70%; /* #FF6B6B */
+    --emergency-foreground: 220 22% 98%;
+    --emergency-glow: 0 85% 85%;
+
+    /* Mindful neutral palette */
+    --card: 220 15% 97%;
+    --card-foreground: 222 15% 25%;
+    --popover: 220 15% 97%;
+    --popover-foreground: 222 15% 25%;
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 5% 55%;
+    --accent: 212 25% 90%;
+    --accent-foreground: 222 15% 25%;
+
+    /* Therapeutic interaction states */
+    --border: 220 10% 88%;
+    --input: 220 10% 95%;
+    --ring: 212 45% 58%;
+    --destructive: 0 85% 70%;
+    --destructive-foreground: 220 22% 98%;
+
+    /* Breathing animation gradients */
+    --gradient-breath: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary-soft)));
+    --gradient-calm: linear-gradient(180deg, hsl(var(--background)), hsl(var(--accent)));
+    --gradient-crisis: linear-gradient(135deg, hsl(var(--emergency)), hsl(var(--emergency-glow)));
+    --gradient-growth: linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-glow)));
+
+    /* Therapeutic shadows for depth */
+    --shadow-gentle: 0 4px 20px -2px hsl(var(--primary) / 0.1);
+    --shadow-embrace: 0 8px 30px -4px hsl(var(--secondary) / 0.2);
+    --shadow-crisis: 0 0 40px hsl(var(--emergency) / 0.3);
+    --shadow-growth: 0 4px 20px -2px hsl(var(--success) / 0.15);
+
+    /* Therapeutic transitions */
+    --transition-breath: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-gentle: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    --transition-crisis: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 1rem;
+    --radius-therapeutic: 2rem;
+
+    --sidebar-background: 220 15% 97%;
+    --sidebar-foreground: 222 15% 25%;
+    --sidebar-primary: 212 45% 58%;
+    --sidebar-primary-foreground: 220 22% 98%;
+    --sidebar-accent: 212 25% 90%;
+    --sidebar-accent-foreground: 222 15% 25%;
+    --sidebar-border: 220 10% 88%;
+    --sidebar-ring: 212 45% 58%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
