@@ -1,0 +1,28 @@
+{
+  "dataset_name": "suicide_detection",
+  "processed_at": "2025-08-15T07:47:24.507189",
+  "splits": {
+    "train": 150603,
+    "validation": 21515,
+    "test": 43030
+  },
+  "label_distribution": {
+    "train": {
+      "0": 79984,
+      "1": 70619
+    },
+    "validation": {
+      "0": 11426,
+      "1": 10089
+    },
+    "test": {
+      "0": 22853,
+      "1": 20177
+    }
+  },
+  "text_statistics": {
+    "avg_length": 451.6865334687888,
+    "min_length": 8,
+    "max_length": 2004
+  }
+}

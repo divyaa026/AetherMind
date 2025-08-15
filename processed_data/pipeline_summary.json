@@ -1,0 +1,30 @@
+{
+  "pipeline_run_at": "2025-08-15T07:47:24.698752",
+  "total_datasets": 2,
+  "datasets": {
+    "depression_reddit": {
+      "total_records": 6723,
+      "splits": {
+        "train": 4705,
+        "validation": 673,
+        "test": 1345
+      },
+      "label_distribution": {
+        "0": 2586,
+        "1": 2119
+      }
+    },
+    "suicide_detection": {
+      "total_records": 215148,
+      "splits": {
+        "train": 150603,
+        "validation": 21515,
+        "test": 43030
+      },
+      "label_distribution": {
+        "0": 79984,
+        "1": 70619
+      }
+    }
+  }
+}
