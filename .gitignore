@@ -23,8 +23,6 @@ Thumbs.db
 *.csv
 data/
 models/
-*.pkl
-*.h5
 
 # Environment
 .env
