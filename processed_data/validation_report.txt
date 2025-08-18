@@ -1,0 +1,49 @@
+
+AETHERMIND VALIDATION REPORT
+============================
+Generated: 2025-08-18 20:31:50.347483
+
+ABLATION STUDY RESULTS
+----------------------
+Text-Only Model:
+  F1 = 0.9316 ± 0.0012
+  95% CI = [0.9298, 0.9336]
+
+Behavior-Only Model:
+  F1 = 0.8754 ± 0.0012
+  95% CI = [0.8737, 0.8774]
+
+Combined Model:
+  F1 = 0.9396 ± 0.0010
+  95% CI = [0.9380, 0.9414]
+
+Improvement over text-only: 0.0080
+Statistical significance: YES (p=0.000000)
+
+SHAP ANALYSIS INSIGHTS
+----------------------
+
+- Top 5 predictive features: ['night_activity', 'screen_time', 'suicide', 'depression', 'kill']
+- Behavioral feature contributions: 
+  • Night activity: 0.2367
+  • Screen time: 0.1435
+  • App switches: 0.0290
+- In ambiguous cases, behavioral features resolved ~28% of misclassifications (simulated)
+
+VISUALIZATIONS SAVED
+---------------------
+1. SHAP summary plot: processed_data/visualizations/shap_summary.png
+2. Individual SHAP explanation: processed_data/visualizations/shap_individual.png
+3. Confusion matrix: processed_data/visualizations/confusion_matrix.png
+4. ROC curve: processed_data/visualizations/roc_curve.png
+
+NEXT STEPS
+----------
+1. Integrate feature extraction into app:
+   - Use models/text_vectorizer.pkl for text
+   - Scale behavioral features using StandardScaler
+2. Include these results in paper:
+   - Table 1: Ablation study metrics
+   - Figure 2: SHAP summary plot
+   - Figure 3: ROC curves comparison
+3. Clinical validation with real behavioral data

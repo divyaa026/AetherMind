@@ -1,0 +1,46 @@
+
+AETHERMIND ROBUSTNESS REPORT
+============================
+Generated: 2025-08-18 21:10:17.131149
+
+CORE VALIDATION METRICS
+-----------------------
+               | Train (CV)      | Test (Holdout) 
+---------------|-----------------|-----------------
+Text-Only      | 0.9632 ± 0.0044 | 0.7359
+Behavior-Only  | 0.8998 ± 0.0081 | 0.9009
+Combined Model | 0.9802 ± 0.0028 | 0.8906
+
+Improvement over text-only: 0.1547
+Statistical significance: YES (p=0.000000)
+
+ROBUSTNESS SAFEGUARDS
+---------------------
+1. Adversarial Validation (Domain Detectability):
+   - AUC = 0.9616 → FAIL 
+   - Interpretation: Significant domain shift detected
+
+2. Causal Invariance Testing:
+   - Stability Score = 0.8745 → FAIL
+   - Interpretation: Over-relies on synthetic patterns
+
+3. Cross-Domain Generalization:
+   - External Dataset F1 = N/A → WARNING
+
+METHODOLOGICAL NOTES
+--------------------
+- Hybrid Data Generation: 30% features from clinical distributions (Saeb et al. 2015)
+- Test Set: Strict holdout from different platform (Suicide_Detection.csv)
+- Statistical Testing: Repeated (5x3) stratified CV with paired t-tests
+
+LITERATURE ANCHORS
+------------------
+1. Screen Time Distributions: Saeb et al. (JMIR 2015)
+2. Night Activity Patterns: Ben-Zeev et al. (JMED 2015)
+3. Validation Framework: Torous et al. (Nature Digital Med 2022)
+
+NEXT STEPS
+----------
+1. ⚠️ Address robustness issues
+2. Integrate feature extraction pipeline into app
+3. Prepare manuscript with Table 1 (above metrics) and Figure 1 (validation framework)
