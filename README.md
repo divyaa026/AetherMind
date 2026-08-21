@@ -1,4 +1,4 @@
-# MindGuard: Mental Health Crisis Detection System
+# AetherMInd: Mental Health Crisis Detection System
 
 A production-ready, privacy-preserving mental health crisis detection system with multi-modal ML capabilities, federated learning, and real-time intervention capabilities.
 
