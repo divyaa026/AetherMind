@@ -1,0 +1,204 @@
+% Federated Learning with Differential Privacy for Mental Health Prediction
+% Paper Template
+
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{natbib}
+\usepackage[margin=1in]{geometry}
+
+% Title
+\title{Federated Learning with Differential Privacy for Mental Health Risk Prediction: A Privacy-Preserving Approach}
+
+\author{
+    Your Name\\
+    \texttt{email@example.com}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Mental health data is highly sensitive, yet machine learning models require large datasets for accurate predictions. This paper presents a federated learning framework with differential privacy guarantees for mental health risk prediction. Our approach enables collaborative model training across distributed healthcare institutions without sharing raw patient data. We implement FedAvg with DP-SGD using the Opacus library, achieving competitive prediction accuracy while providing formal privacy guarantees ($\epsilon = 1.0$, $\delta = 10^{-5}$). Experiments on synthetic mental health time series data demonstrate that our federated approach achieves comparable performance to centralized training while maintaining strong privacy protection against membership inference attacks.
+\end{abstract}
+
+\section{Introduction}
+
+Mental health disorders affect millions of people worldwide, and early detection of high-risk individuals is crucial for timely intervention. However, mental health data is extremely sensitive, subject to strict privacy regulations (HIPAA, GDPR), and distributed across multiple healthcare providers.
+
+Traditional centralized machine learning approaches face two major challenges:
+\begin{enumerate}
+    \item \textbf{Data Silos}: Mental health data is distributed across hospitals, clinics, and digital health platforms
+    \item \textbf{Privacy Concerns}: Aggregating sensitive health data raises significant privacy and regulatory issues
+\end{enumerate}
+
+Federated learning (FL) offers a promising solution by enabling collaborative model training without data centralization. Combined with differential privacy (DP), we can provide formal mathematical guarantees about the privacy of individual patient records.
+
+\subsection{Contributions}
+
+Our main contributions are:
+\begin{itemize}
+    \item A complete federated learning pipeline for mental health time series prediction
+    \item Integration of differential privacy using Opacus with Rényi DP accounting
+    \item Comprehensive evaluation including classification metrics, calibration, fairness, and privacy auditing
+    \item Open-source implementation with reproducible experiments
+\end{itemize}
+
+\section{Related Work}
+
+\subsection{Federated Learning}
+McMahan et al.~\cite{mcmahan2017} introduced FedAvg for communication-efficient federated learning. Extensions include FedProx~\cite{li2020fedprox} for heterogeneous data and FedNova for normalized averaging.
+
+\subsection{Differential Privacy in ML}
+Abadi et al.~\cite{abadi2016deep} introduced DP-SGD for deep learning with differential privacy. The Opacus library provides a practical implementation for PyTorch models.
+
+\subsection{Mental Health Prediction}
+Recent work has applied machine learning to mental health prediction using electronic health records, mobile sensing data, and social media content. However, privacy concerns remain a significant barrier to deployment.
+
+\section{Methodology}
+
+\subsection{Problem Formulation}
+
+We consider $K$ clients (healthcare institutions), each holding a local dataset $D_k = \{(x_i, y_i)\}_{i=1}^{n_k}$ where $x_i \in \mathbb{R}^{T \times d}$ is a time series of $T$ days with $d$ features (sleep, mood, stress, etc.), and $y_i \in \{0, 1\}$ indicates high-risk status.
+
+Our objective is to learn a global model $\theta^*$ that minimizes:
+\begin{equation}
+    \min_\theta \sum_{k=1}^{K} \frac{n_k}{n} \mathcal{L}_k(\theta)
+\end{equation}
+while ensuring $(\epsilon, \delta)$-differential privacy for each client's data.
+
+\subsection{Model Architecture}
+
+We use an LSTM with self-attention for temporal pattern recognition:
+\begin{itemize}
+    \item Input projection layer: $\mathbb{R}^d \rightarrow \mathbb{R}^{128}$
+    \item Bidirectional LSTM: 2 layers, hidden dimension 128
+    \item Multi-head self-attention: 4 heads
+    \item Classification head with sigmoid activation
+\end{itemize}
+
+\subsection{Federated Learning Protocol}
+
+\begin{algorithm}
+\caption{FedAvg with Differential Privacy}
+\begin{algorithmic}[1]
+\STATE Initialize global model $\theta_0$
+\FOR{round $t = 1, \ldots, T$}
+    \STATE Select subset $S_t \subseteq [K]$ of clients
+    \FOR{client $k \in S_t$ in parallel}
+        \STATE $\theta_k^{t+1} \leftarrow$ LocalTrainDP($\theta_t$, $D_k$, $\epsilon_k$)
+    \ENDFOR
+    \STATE $\theta_{t+1} \leftarrow \sum_{k \in S_t} \frac{n_k}{\sum_j n_j} \theta_k^{t+1}$
+\ENDFOR
+\RETURN $\theta_T$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Differential Privacy}
+
+We apply DP-SGD during local training with:
+\begin{itemize}
+    \item Gradient clipping with max norm $C = 1.0$
+    \item Gaussian noise with multiplier $\sigma$
+    \item Privacy accounting using Rényi DP
+\end{itemize}
+
+The privacy guarantee is:
+\begin{equation}
+    \epsilon = \frac{1}{\alpha - 1} \log\left(1 + \binom{\alpha}{2}\frac{q^2}{\sigma^2}\right) \cdot T
+\end{equation}
+
+\section{Experiments}
+
+\subsection{Synthetic Data}
+
+We generate realistic synthetic mental health data with:
+\begin{itemize}
+    \item 10,000 users, 30 days of daily records
+    \item Features: sleep hours, exercise, stress, mood, social interaction, productivity
+    \item Realistic correlations (e.g., poor sleep $\rightarrow$ high stress)
+    \item High-risk label based on clinical criteria
+\end{itemize}
+
+\subsection{Experimental Setup}
+
+\begin{itemize}
+    \item \textbf{Clients}: 10 federated clients with IID data partitioning
+    \item \textbf{Rounds}: 50 federated rounds
+    \item \textbf{Local Training}: 5 epochs, batch size 32, learning rate 0.001
+    \item \textbf{Privacy}: $\epsilon = 1.0$, $\delta = 10^{-5}$
+\end{itemize}
+
+\subsection{Results}
+
+% Include results table here
+\input{results_table}
+
+\subsection{Privacy-Utility Tradeoff}
+
+% Include privacy-utility figure here
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{figures/privacy_utility_tradeoff.pdf}
+%     \caption{Privacy-utility tradeoff for different epsilon values}
+%     \label{fig:tradeoff}
+% \end{figure}
+
+\section{Discussion}
+
+Our results demonstrate that federated learning with differential privacy can achieve competitive performance for mental health risk prediction while providing strong privacy guarantees.
+
+Key findings:
+\begin{enumerate}
+    \item The federated model achieves comparable accuracy to centralized training
+    \item Differential privacy with $\epsilon = 1.0$ provides meaningful protection against membership inference
+    \item Byzantine-robust aggregation (median, trimmed mean) improves robustness
+\end{enumerate}
+
+\section{Conclusion}
+
+We presented a privacy-preserving federated learning framework for mental health prediction. Our approach enables collaborative model training across healthcare institutions without sharing sensitive patient data, while providing formal differential privacy guarantees.
+
+Future work includes:
+\begin{itemize}
+    \item Evaluation on real clinical data
+    \item Personalized federated learning for individual patients
+    \item Integration with secure aggregation protocols
+\end{itemize}
+
+\section*{Code Availability}
+
+The complete implementation is available at: \url{https://github.com/divyaa026/AetherMind/tree/main/federated-mental-health}
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem{mcmahan2017}
+McMahan, H. B., Moore, E., Ramage, D., Hampson, S., \& y Arcas, B. A. (2017).
+Communication-efficient learning of deep networks from decentralized data.
+\textit{AISTATS}.
+
+\bibitem{abadi2016deep}
+Abadi, M., Chu, A., Goodfellow, I., McMahan, H. B., Mironov, I., Talwar, K., \& Zhang, L. (2016).
+Deep learning with differential privacy.
+\textit{CCS}.
+
+\bibitem{li2020fedprox}
+Li, T., Sahu, A. K., Zaheer, M., Sanjabi, M., Talwalkar, A., \& Smith, V. (2020).
+Federated optimization in heterogeneous networks.
+\textit{MLSys}.
+
+\end{thebibliography}
+
+\end{document}

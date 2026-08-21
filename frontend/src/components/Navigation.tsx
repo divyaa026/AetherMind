@@ -1,13 +1,25 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { 
   Wind, 
   Heart, 
   Shield, 
   TrendingUp,
   Home,
-  Activity
+  Activity,
+  Sun,
+  BarChart3,
+  Lightbulb,
+  Brain,
+  PieChart,
+  Link,
+  Users,
+  UserCheck,
+  Lock,
+  Settings,
+  Trophy
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -16,37 +28,23 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
-  const navigationItems = [
-    {
-      id: 'home',
-      label: 'Home',
-      icon: Home,
-      description: 'Your sanctuary'
-    },
-    {
-      id: 'breathing',
-      label: 'Breathe',
-      icon: Wind,
-      description: 'Mindful breathing'
-    },
-    {
-      id: 'journal',
-      label: 'Journal',
-      icon: Heart,
-      description: 'Emotion tracking'
-    },
-    {
-      id: 'safety',
-      label: 'Safety',
-      icon: Shield,
-      description: 'Crisis support'
-    },
-    {
-      id: 'growth',
-      label: 'Growth',
-      icon: TrendingUp,
-      description: 'Progress insights'
-    }
+  const primaryNav = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'checkin', label: 'Check-in', icon: Sun },
+    { id: 'breathing', label: 'Breathe', icon: Wind },
+    { id: 'journal', label: 'Journal', icon: Heart },
+    { id: 'safety', label: 'Safety', icon: Shield },
+  ];
+
+  const secondaryNav = [
+    { id: 'forecast', label: 'Forecast', icon: BarChart3 },
+    { id: 'interventions', label: 'Actions', icon: Lightbulb },
+    { id: 'resilience', label: 'Program', icon: Brain },
+    { id: 'analytics', label: 'Insights', icon: PieChart },
+    { id: 'privacy', label: 'Privacy', icon: Lock },
+    { id: 'personalize', label: 'Settings', icon: Settings },
+    { id: 'journey', label: 'Journey', icon: Trophy },
+    { id: 'growth', label: 'Growth', icon: TrendingUp },
   ];
 
   return (
@@ -73,9 +71,9 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="grid grid-cols-5 gap-2">
-        {navigationItems.map((item) => {
+      {/* Primary Navigation Tabs */}
+      <div className="grid grid-cols-5 gap-2 mb-3">
+        {primaryNav.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           
@@ -102,6 +100,37 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
           );
         })}
       </div>
+
+      {/* Secondary Navigation - Scrollable */}
+      <ScrollArea className="w-full">
+        <div className="flex gap-2 pb-2">
+          {secondaryNav.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            
+            return (
+              <Button
+                key={item.id}
+                variant={isActive ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => onTabChange(item.id)}
+                className={`
+                  flex items-center gap-1.5 h-auto py-2 px-3 whitespace-nowrap
+                  transition-all duration-300
+                  ${isActive 
+                    ? 'bg-secondary text-secondary-foreground shadow-sm' 
+                    : 'hover:bg-accent/50'
+                  }
+                `}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Button>
+            );
+          })}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </Card>
   );
 };

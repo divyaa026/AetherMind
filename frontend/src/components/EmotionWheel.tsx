@@ -1,10 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, Send, Heart, Brain, Zap } from 'lucide-react';
+import { Mic, MicOff, Send, Heart, Brain, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import AetherMindAPIService, { EmotionEntry } from '@/services/AetherMindAPI';
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface EmotionData {
   name: string;
@@ -19,6 +63,105 @@ const EmotionWheel: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [sentiment, setSentiment] = useState<'positive' | 'neutral' | 'negative'>('neutral');
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update text with final results, or show interim while speaking
+      if (finalTranscript) {
+        setJournalText(prev => prev + finalTranscript + ' ');
+      }
+    };
+
+    recognition.onerror = (event: Event) => {
+      console.error('Speech recognition error:', event);
+      setIsListening(false);
+      toast({
+        title: "Voice input error",
+        description: "Please check microphone permissions and try again",
+        variant: "destructive"
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleVoiceInput = () => {
+    if (!speechSupported) {
+      toast({
+        title: "Voice input not supported",
+        description: "Your browser doesn't support speech recognition. Try Chrome or Edge.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      // Analyze the text after stopping
+      if (journalText.trim()) {
+        handleTextAnalysis(journalText);
+      }
+    } else {
+      try {
+        recognitionRef.current.start();
+        toast({
+          title: "Listening...",
+          description: "Speak now. Click the button again to stop.",
+        });
+      } catch (error) {
+        console.error('Failed to start recognition:', error);
+        toast({
+          title: "Could not start voice input",
+          description: "Please check microphone permissions",
+          variant: "destructive"
+        });
+      }
+    }
+  };
 
   const emotions: EmotionData[] = [
     // Joy family
@@ -81,16 +224,6 @@ const EmotionWheel: React.FC = () => {
       console.error('Analysis failed:', error);
     }
     setIsAnalyzing(false);
-  };
-
-  const handleVoiceInput = () => {
-    setIsListening(true);
-    // Simulate voice input
-    setTimeout(() => {
-      setJournalText("I've been feeling really overwhelmed lately");
-      setIsListening(false);
-      handleTextAnalysis("I've been feeling really overwhelmed lately");
-    }, 2000);
   };
 
   const handleSaveEntry = async () => {
@@ -193,14 +326,19 @@ const EmotionWheel: React.FC = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Tell us more about it</h3>
           <Button
-            variant="outline"
+            variant={isListening ? "destructive" : "outline"}
             size="sm"
             onClick={handleVoiceInput}
-            disabled={isListening}
+            disabled={!speechSupported}
             className="flex items-center gap-2"
+            title={!speechSupported ? "Speech recognition not supported in this browser" : "Click to start/stop voice input"}
           >
-            <Mic className={`w-4 h-4 ${isListening ? 'animate-pulse text-emergency' : ''}`} />
-            {isListening ? 'Listening...' : 'Voice'}
+            {isListening ? (
+              <MicOff className="w-4 h-4 animate-pulse" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+            {isListening ? 'Stop' : 'Voice'}
           </Button>
         </div>
         

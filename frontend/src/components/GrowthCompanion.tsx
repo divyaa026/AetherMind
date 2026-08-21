@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import MockDataBanner from '@/components/MockDataBanner';
 import { 
   TrendingUp, 
   Award, 
@@ -79,6 +80,8 @@ const GrowthCompanion: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <MockDataBanner feature="Growth Companion" storageType="localStorage" />
+      
       {/* Growth Companion Pet */}
       <Card className="p-6 bg-gradient-growth shadow-growth">
         <div className="text-center space-y-4">

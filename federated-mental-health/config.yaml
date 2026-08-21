@@ -1,0 +1,70 @@
+# Federated Mental Health Prediction - Default Configuration
+
+# Experiment settings
+experiment_name: "federated_mental_health_v1"
+seed: 42
+
+# Data generation
+data:
+  n_users: 10000
+  n_days: 30
+  missing_rate: 0.3
+  
+# Preprocessing
+preprocessing:
+  sequence_length: 7
+  train_ratio: 0.7
+  val_ratio: 0.15
+  use_rolling_features: true
+  
+# Federated learning
+federated:
+  n_clients: 10
+  partition_strategy: "iid"  # Options: iid, non_iid_label, non_iid_quantity, realistic
+  dirichlet_alpha: 0.5  # For non-IID partitioning
+  n_rounds: 50
+  client_fraction: 0.3
+  min_clients_per_round: 3
+  
+# Local training
+training:
+  local_epochs: 5
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 1e-5
+  early_stopping: true
+  patience: 3
+  
+# Model architecture
+model:
+  hidden_dim: 128
+  n_layers: 2
+  dropout: 0.3
+  bidirectional: true
+  n_attention_heads: 4
+  
+# Differential privacy
+privacy:
+  use_dp: true
+  epsilon: 1.0
+  delta: 1e-5
+  max_grad_norm: 1.0
+  noise_multiplier: 1.0
+  
+# Aggregation
+aggregation:
+  strategy: "fedavg"  # Options: fedavg, fedavg_momentum, median, trimmed_mean
+  momentum: 0.9
+  server_dp_noise: 0.1
+  
+# Output
+output:
+  base_dir: "./experiments"
+  save_checkpoints: true
+  checkpoint_every: 10
+  
+# Evaluation
+evaluation:
+  compute_fairness: true
+  compute_calibration: true
+  run_privacy_audit: true

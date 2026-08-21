@@ -1,0 +1,55 @@
+{
+  "experiment_name": "quick_test",
+  "timestamp": "2026-01-16T12:56:58.809311",
+  "config": {
+    "n_clients": 3,
+    "n_rounds": 5,
+    "n_users": 300
+  },
+  "phases": {
+    "data_generation": {
+      "n_samples": 4200,
+      "n_users": 300,
+      "high_risk_rate": 0.008333333333333333
+    },
+    "preprocessing": {
+      "train_size": 1408,
+      "test_size": 353,
+      "input_dim": 65,
+      "sequence_length": 7
+    },
+    "training": {
+      "n_rounds": 5,
+      "round_metrics": [
+        {
+          "round": 2,
+          "accuracy": 0.9801699716713881,
+          "auc_roc": 0.5637535816618912,
+          "f1": 0.0
+        },
+        {
+          "round": 4,
+          "accuracy": 0.9858356940509915,
+          "auc_roc": 0.4921203438395415,
+          "f1": 0.0
+        },
+        {
+          "round": 5,
+          "accuracy": 0.9886685552407932,
+          "auc_roc": 0.41045845272206305,
+          "f1": 0.0
+        }
+      ]
+    }
+  },
+  "final_metrics": {
+    "accuracy": 0.9886685552407932,
+    "balanced_accuracy": 0.5,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "auc_roc": 0.41045845272206305,
+    "auc_pr": 0.011535082355515792,
+    "mcc": 0.0
+  }
+}

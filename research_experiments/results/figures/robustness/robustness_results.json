@@ -1,0 +1,21 @@
+{
+  "baseline_accuracy": 0.966,
+  "baseline_f1": 0.9512893982808023,
+  "non_iid_stress": {
+    "accuracy": 0.957,
+    "f1_score": 0.9421265141318977,
+    "degradation_pct": 0.9000000000000008
+  },
+  "partial_participation": {
+    "participation_rate": 0.3,
+    "accuracy": 0.965,
+    "f1_score": 0.9494949494949495,
+    "extra_rounds": 0
+  },
+  "membership_inference": {
+    "attack_auc": 0.5282250000000001,
+    "attack_success": "Low",
+    "privacy_protection": "Strong"
+  },
+  "robustness_score": 0.9626666666666667
+}

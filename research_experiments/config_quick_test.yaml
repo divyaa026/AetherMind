@@ -1,0 +1,116 @@
+# Quick Test Configuration
+# Reduced parameters for fast validation testing
+
+# Paths
+paths:
+  data_dir: "../data/synthetic_fixed"
+  results_dir: "./results"
+  figures_dir: "./results/figures"
+  models_dir: "./results/models"
+  
+# Dataset
+data:
+  dataset_name: "synthetic_mental_health"
+  features: ["sleep_hours", "stress_level", "physical_activity", "social_interaction", "mood_score"]
+  label: "high_risk_day"
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  seed: 42
+
+# Federated Learning Configuration (REDUCED FOR TESTING)
+federated:
+  num_clients: 3              # Reduced from 10
+  clients_per_round: 3
+  communication_rounds: 10    # Reduced from 50
+  local_epochs: 2             # Reduced from 5
+  aggregation: "fedavg"
+  
+# Model Architecture
+model:
+  type: "lstm"
+  input_size: 5
+  hidden_size: 32             # Reduced from 64
+  num_layers: 1               # Reduced from 2
+  dropout: 0.2
+  output_size: 1
+  sequence_length: 7
+
+# Training Hyperparameters
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  optimizer: "adam"
+  loss_function: "bce"
+  gradient_clip: 1.0
+  early_stopping_patience: 5
+  
+# Differential Privacy Configuration
+privacy:
+  enabled: true
+  mechanism: "dp_sgd"
+  target_epsilon: 1.0
+  target_delta: 1.0e-5
+  max_grad_norm: 1.0
+  noise_multiplier: 1.1
+  epsilon_sweep: [0.5, 1.0, 2.0]  # Reduced from 5 values to 3
+  
+# Experiment Configuration
+experiments:
+  run_data_quality: true
+  run_convergence: true
+  run_privacy_tradeoff: true
+  run_robustness: true
+  
+  data_quality:
+    min_class_balance: 0.02
+    max_class_balance: 0.98
+    correlation_threshold: 0.1
+    temporal_lag: 1
+    
+  convergence:
+    baseline_types: ["centralized", "federated", "federated_dp"]
+    num_rounds: 10              # Reduced from 50
+    metrics: ["accuracy", "f1_score", "auc_pr", "loss"]
+    
+  privacy_tradeoff:
+    epsilon_values: [0.5, 1.0, 2.0]  # Reduced
+    delta: 1.0e-5
+    baseline_no_dp: true
+    metrics: ["accuracy", "f1_score", "auc_pr", "precision", "recall"]
+    
+  robustness:
+    non_iid_severity: "extreme"
+    partial_participation_rate: 0.3
+    membership_inference:
+      enabled: true
+      shadow_models: 3          # Reduced from 5
+      attack_epochs: 10         # Reduced from 20
+      
+# Logging
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_file: "./results/experiment.log"
+  save_checkpoints: false      # Disabled for testing
+  checkpoint_frequency: 10
+  
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  
+# Reporting
+reporting:
+  generate_summary: true
+  summary_file: "./results/research_summary.md"
+  figure_format: "png"
+  figure_dpi: 150              # Reduced from 300
+  table_format: "markdown"
+  include_visualizations: true
+  
+# Computational Resources
+resources:
+  device: "cpu"                # Force CPU for testing
+  num_workers: 2               # Reduced from 4
+  pin_memory: false

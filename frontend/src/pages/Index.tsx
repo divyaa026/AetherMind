@@ -5,6 +5,14 @@ import BreathingGuardian from '@/components/BreathingGuardian';
 import EmotionWheel from '@/components/EmotionWheel';
 import SafetySanctuary from '@/components/SafetySanctuary';
 import GrowthCompanion from '@/components/GrowthCompanion';
+import DailyCheckIn from '@/components/DailyCheckIn';
+import ForecastDashboard from '@/components/ForecastDashboard';
+import InterventionFeed from '@/components/InterventionFeed';
+import ResilienceProgram from '@/components/ResilienceProgram';
+import AnalyticsPortal from '@/components/AnalyticsPortal';
+import PrivacyCenter from '@/components/PrivacyCenter';
+import PersonalizationEngine from '@/components/PersonalizationEngine';
+import WellnessJourney from '@/components/WellnessJourney';
 import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -25,12 +33,28 @@ const Index = () => {
     switch (activeTab) {
       case 'home':
         return <HomeScreen onNavigate={handleTabChange} />;
+      case 'checkin':
+        return <DailyCheckIn />;
       case 'breathing':
         return <BreathingGuardian onComplete={handleBreathingComplete} />;
       case 'journal':
         return <EmotionWheel />;
       case 'safety':
         return <SafetySanctuary />;
+      case 'forecast':
+        return <ForecastDashboard />;
+      case 'interventions':
+        return <InterventionFeed onNavigate={handleTabChange} />;
+      case 'resilience':
+        return <ResilienceProgram onNavigate={handleTabChange} />;
+      case 'analytics':
+        return <AnalyticsPortal />;
+      case 'privacy':
+        return <PrivacyCenter />;
+      case 'personalize':
+        return <PersonalizationEngine />;
+      case 'journey':
+        return <WellnessJourney />;
       case 'growth':
         return <GrowthCompanion />;
       default:

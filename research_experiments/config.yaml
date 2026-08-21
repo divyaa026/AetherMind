@@ -1,0 +1,120 @@
+# Research Experiment Configuration
+# Federated Learning with Differential Privacy for Mental Health Prediction
+
+# Paths
+paths:
+  data_dir: "../data/synthetic_fixed"
+  results_dir: "./results"
+  figures_dir: "./results/figures"
+  models_dir: "./results/models"
+  
+# Dataset
+data:
+  dataset_name: "synthetic_mental_health"
+  features: ["sleep_hours", "stress_level", "physical_activity", "social_interaction", "mood_score"]
+  label: "high_risk_day"
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  seed: 42
+
+# Federated Learning Configuration
+federated:
+  num_clients: 10
+  clients_per_round: 10  # 100% participation by default
+  communication_rounds: 50
+  local_epochs: 5
+  aggregation: "fedavg"
+  
+# Model Architecture
+model:
+  type: "lstm"
+  input_size: 5  # Number of features
+  hidden_size: 64
+  num_layers: 2
+  dropout: 0.2
+  output_size: 1  # Binary classification
+  sequence_length: 7  # Past 7 days
+
+# Training Hyperparameters
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  optimizer: "adam"
+  loss_function: "bce"  # Binary Cross Entropy
+  gradient_clip: 1.0
+  early_stopping_patience: 10
+  
+# Differential Privacy Configuration
+privacy:
+  enabled: true
+  mechanism: "dp_sgd"  # Opacus DP-SGD
+  target_epsilon: 1.0
+  target_delta: 1.0e-5
+  max_grad_norm: 1.0
+  noise_multiplier: 1.1
+  epsilon_sweep: [0.2, 0.5, 1.0, 2.0, 5.0]  # For privacy-utility tradeoff experiment
+
+# Experiment Configuration
+experiments:
+  run_data_quality: true
+  run_convergence: true
+  run_privacy_tradeoff: true
+  run_robustness: true
+  
+  # Data Quality Experiment
+  data_quality:
+    min_class_balance: 0.02  # Flag if minority class < 2%
+    max_class_balance: 0.98  # Flag if majority class > 98%
+    correlation_threshold: 0.1  # Minimum correlation to report
+    temporal_lag: 1  # Days lag for temporal correlation
+    
+  # Convergence Experiment
+  convergence:
+    baseline_types: ["centralized", "federated", "federated_dp"]
+    num_rounds: 50
+    metrics: ["accuracy", "f1_score", "auc_pr", "loss"]
+    
+  # Privacy-Utility Tradeoff Experiment
+  privacy_tradeoff:
+    epsilon_values: [0.2, 0.5, 1.0, 2.0, 5.0]
+    delta: 1.0e-5
+    baseline_no_dp: true
+    metrics: ["accuracy", "f1_score", "auc_pr", "precision", "recall"]
+    
+  # Robustness Experiment
+  robustness:
+    non_iid_severity: "extreme"  # Options: mild, moderate, extreme
+    partial_participation_rate: 0.3  # 30% of clients per round
+    membership_inference:
+      enabled: true
+      shadow_models: 5
+      attack_epochs: 20
+      
+# Logging
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_file: "./results/experiment.log"
+  save_checkpoints: true
+  checkpoint_frequency: 10  # Every 10 rounds
+  
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  
+# Reporting
+reporting:
+  generate_summary: true
+  summary_file: "./results/research_summary.md"
+  figure_format: "png"
+  figure_dpi: 300
+  table_format: "markdown"
+  include_visualizations: true
+  
+# Computational Resources
+resources:
+  device: "cuda"  # Options: cuda, cpu
+  num_workers: 4
+  pin_memory: true

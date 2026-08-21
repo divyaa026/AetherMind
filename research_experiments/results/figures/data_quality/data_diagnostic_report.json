@@ -1,0 +1,70 @@
+{
+  "total_samples": 4841,
+  "num_clients": 3,
+  "features": [
+    "sleep_hours",
+    "stress_level",
+    "physical_activity",
+    "social_interaction",
+    "mood_score"
+  ],
+  "label": "high_risk_day",
+  "class_distribution": {
+    "global_positive_ratio": 0.03098533360875852,
+    "global_negative_ratio": 0.9690146663912415,
+    "client_positive_ratios": [
+      0.032663316582914576,
+      0.031835205992509365,
+      0.02853673345476624
+    ],
+    "client_positive_mean": 0.031011752010063388,
+    "client_positive_std": 0.0017824569979449196,
+    "client_positive_min": 0.02853673345476624,
+    "client_positive_max": 0.032663316582914576,
+    "is_balanced": true,
+    "extreme_imbalance_flag": false
+  },
+  "feature_correlations": {
+    "stress_level": 0.06917796130761482,
+    "social_interaction": -0.04985012579148969,
+    "physical_activity": -0.04590284328153005,
+    "mood_score": -0.033510186035113326,
+    "sleep_hours": -0.018493619123848882
+  },
+  "temporal_correlations": {
+    "sleep_hours": {
+      "mean_autocorr": 0.4238518668535498,
+      "std_autocorr": 0.13167361828460372,
+      "has_temporal_structure": true
+    },
+    "stress_level": {
+      "mean_autocorr": 0.5230078209363833,
+      "std_autocorr": 0.12979959266072663,
+      "has_temporal_structure": true
+    },
+    "physical_activity": {
+      "mean_autocorr": 0.015149318554754754,
+      "std_autocorr": 0.1385610106899704,
+      "has_temporal_structure": false
+    },
+    "social_interaction": {
+      "mean_autocorr": -0.010058014134967258,
+      "std_autocorr": 0.1303500257534036,
+      "has_temporal_structure": false
+    },
+    "mood_score": {
+      "mean_autocorr": 0.018423425350377432,
+      "std_autocorr": 0.15703268839301723,
+      "has_temporal_structure": false
+    }
+  },
+  "non_iid_metrics": {
+    "key_feature": "stress_level",
+    "mean_js_divergence": 0.08643842503595933,
+    "max_js_divergence": 0.11064499036102313,
+    "min_js_divergence": 0.06258356423929452,
+    "is_non_iid": false,
+    "heterogeneity_level": "Low",
+    "status": "Not detected"
+  }
+}
