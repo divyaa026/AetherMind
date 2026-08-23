@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import tempfile
 from pathlib import Path
+from torch.utils.data import DataLoader, TensorDataset
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -43,9 +44,9 @@ class TestModelArchitecture:
         input_dim = 20
         
         x = torch.randn(batch_size, seq_len, input_dim)
-        
-        logits, attention = model(x)
-        
+
+        logits, attention = model(x, return_attention=True)
+
         assert logits.shape == (batch_size, 1)
         assert attention is not None
     
@@ -79,13 +80,13 @@ class TestModelArchitecture:
     def test_model_different_configs(self):
         """Test model with different configurations."""
         configs = [
-            {'hidden_dim': 64, 'n_layers': 1, 'dropout': 0.1},
-            {'hidden_dim': 256, 'n_layers': 3, 'dropout': 0.5},
-            {'hidden_dim': 128, 'n_layers': 2, 'bidirectional': False}
+            {'hidden_dim': 64, 'num_layers': 1, 'dropout': 0.1},
+            {'hidden_dim': 256, 'num_layers': 3, 'dropout': 0.5},
+            {'hidden_dim': 128, 'num_layers': 2, 'bidirectional': False}
         ]
-        
+
         for config in configs:
-            model = create_model(input_dim=20, **config)
+            model = create_model(input_dim=20, config=config)
             x = torch.randn(4, 7, 20)
             logits, _ = model(x)
             assert logits.shape[0] == 4
@@ -96,7 +97,7 @@ class TestSelfAttention:
     
     def test_attention_output_shape(self):
         """Test attention output shape."""
-        attention = SelfAttention(hidden_dim=128, n_heads=4)
+        attention = SelfAttention(hidden_dim=128, num_heads=4)
         
         x = torch.randn(8, 7, 128)
         output, weights = attention(x)
@@ -106,13 +107,15 @@ class TestSelfAttention:
     
     def test_attention_weights_sum_to_one(self):
         """Test that attention weights sum to 1."""
-        attention = SelfAttention(hidden_dim=128, n_heads=4)
-        
+        attention = SelfAttention(hidden_dim=128, num_heads=4)
+        attention.eval()
+
         x = torch.randn(8, 7, 128)
         _, weights = attention(x)
-        
-        # Average attention weights should roughly sum to 1 along seq dim
-        weight_sums = weights.mean(dim=1)
+
+        # Each query position's attention distribution over key positions
+        # (the softmax dim) should sum to 1.
+        weight_sums = weights.sum(dim=-1)
         assert torch.allclose(weight_sums, torch.ones_like(weight_sums), atol=0.1)
 
 
@@ -184,23 +187,23 @@ class TestLocalTrainer:
         """Test basic training loop."""
         X, y = sample_data
         input_dim = X.shape[2]
-        
+
         model = create_model(input_dim)
-        config = TrainingConfig(epochs=2, batch_size=32)
+        config = TrainingConfig(epochs=2, batch_size=32, use_dp=False)
         trainer = LocalTrainer(model, config)
-        
+
         metrics = trainer.fit(X, y)
-        
-        assert 'final_loss' in metrics
-        assert 'epochs_trained' in metrics
-    
+
+        assert 'train_loss' in metrics
+        assert len(metrics['train_loss']) > 0
+
     def test_training_reduces_loss(self, sample_data):
         """Test that training reduces loss."""
         X, y = sample_data
         input_dim = X.shape[2]
-        
+
         model = create_model(input_dim)
-        
+
         # Initial loss
         model.eval()
         with torch.no_grad():
@@ -208,14 +211,14 @@ class TestLocalTrainer:
             initial_loss = nn.functional.binary_cross_entropy_with_logits(
                 logits.squeeze(), torch.FloatTensor(y)
             ).item()
-        
+
         # Train
-        config = TrainingConfig(epochs=10, batch_size=32, learning_rate=0.01)
+        config = TrainingConfig(epochs=10, batch_size=32, learning_rate=0.01, use_dp=False)
         trainer = LocalTrainer(model, config)
         metrics = trainer.fit(X, y)
-        
+
         # Final loss should be lower (or at least not much higher)
-        assert metrics['final_loss'] < initial_loss * 1.5
+        assert metrics['train_loss'][-1] < initial_loss * 1.5
     
     def test_model_state_management(self, sample_data):
         """Test getting and setting model state."""
@@ -270,42 +273,51 @@ class TestDPOptimizer:
     def test_dp_optimizer_creation(self):
         """Test DP optimizer creation."""
         model = create_model(input_dim=20)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
+        data_loader = DataLoader(
+            TensorDataset(torch.randn(16, 7, 20), torch.randint(0, 2, (16,)).float()),
+            batch_size=8
+        )
         config = DPConfig(
-            target_epsilon=1.0,
-            target_delta=1e-5,
+            epsilon=1.0,
+            delta=1e-5,
             max_grad_norm=1.0,
             noise_multiplier=1.0
         )
-        
-        dp_optimizer = DPOptimizer(model, config)
-        
+
+        dp_optimizer = DPOptimizer(model, optimizer, data_loader, config)
+
         assert dp_optimizer is not None
-    
+
     def test_gradient_clipping(self):
         """Test that gradients are clipped."""
         model = create_model(input_dim=20)
         max_norm = 1.0
-        
-        config = DPConfig(
-            target_epsilon=1.0,
-            target_delta=1e-5,
-            max_grad_norm=max_norm,
-            noise_multiplier=0.0  # No noise for this test
-        )
-        
-        dp_optimizer = DPOptimizer(model, config)
-        
+
         # Create large gradients
         x = torch.randn(8, 7, 20) * 10
         y = torch.randint(0, 2, (8,)).float()
-        
+
+        optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
+        data_loader = DataLoader(TensorDataset(x, y), batch_size=8)
+        config = DPConfig(
+            epsilon=1.0,
+            delta=1e-5,
+            max_grad_norm=max_norm,
+            noise_multiplier=0.0  # No noise for this test
+        )
+
+        dp_optimizer = DPOptimizer(model, optimizer, data_loader, config)
+
         logits, _ = model(x)
         loss = nn.functional.binary_cross_entropy_with_logits(logits.squeeze(), y)
         loss.backward()
-        
-        # Clip gradients
-        dp_optimizer.clip_gradients()
-        
+
+        # Clip gradients (the internal mechanism DPOptimizer.step() uses,
+        # called directly here to test clipping in isolation from the
+        # noise-injection and optimizer-step parts of step())
+        dp_optimizer._clip_gradients()
+
         # Check gradient norms are bounded
         total_norm = 0.0
         for param in model.parameters():
@@ -313,7 +325,7 @@ class TestDPOptimizer:
                 param_norm = param.grad.data.norm(2)
                 total_norm += param_norm.item() ** 2
         total_norm = total_norm ** 0.5
-        
+
         # Clipped norm should be at most max_norm (with some tolerance)
         assert total_norm <= max_norm * len(list(model.parameters())) + 0.1
 
@@ -324,29 +336,31 @@ class TestModelSaveLoad:
     def test_save_load_model(self):
         """Test saving and loading model."""
         model = create_model(input_dim=20)
-        
+        model.eval()
+
         # Get initial predictions
         x = torch.randn(4, 7, 20)
         with torch.no_grad():
             initial_output, _ = model(x)
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / 'model.pt'
-            
+
             # Save
             torch.save({
                 'model_state_dict': model.state_dict()
             }, path)
-            
+
             # Create new model and load
             new_model = create_model(input_dim=20)
+            new_model.eval()
             checkpoint = torch.load(path)
             new_model.load_state_dict(checkpoint['model_state_dict'])
-            
+
             # Compare outputs
             with torch.no_grad():
                 loaded_output, _ = new_model(x)
-            
+
             assert torch.allclose(initial_output, loaded_output)
 
 
