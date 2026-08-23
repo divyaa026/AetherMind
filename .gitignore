@@ -19,11 +19,14 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Data files
+# Data files (large generated artifacts only — do not use bare folder
+# names here, they can collide with source directories like app/models/)
 *.csv
 data/
-models/
+*.pt
+*.pth
+*.pkl
+**/experiments/**/model_checkpoint.pt
 
 # Environment
 .env
-config.py
