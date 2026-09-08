@@ -167,14 +167,19 @@ class MentalHealthPredictor(nn.Module):
         # Self-attention
         self.attention = SelfAttention(hidden_dim, num_heads, dropout)
         
-        # Classification head
+        # Classification head. Uses LayerNorm rather than BatchNorm1d:
+        # BatchNorm normalizes using per-batch statistics, and at a ~3%
+        # positive rate many batches contain zero or one positive example,
+        # making those running statistics unstable and actively corrupting
+        # training. LayerNorm normalizes per-example instead, so it isn't
+        # sensitive to the class composition of a given batch.
         self.classifier = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
-            nn.BatchNorm1d(hidden_dim // 2),
+            nn.LayerNorm(hidden_dim // 2),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, hidden_dim // 4),
-            nn.BatchNorm1d(hidden_dim // 4),
+            nn.LayerNorm(hidden_dim // 4),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 4, output_dim)
